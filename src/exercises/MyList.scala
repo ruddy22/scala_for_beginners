@@ -80,28 +80,16 @@ object TestMyList extends App {
   println(myListOfInt.toString)
   println(
     myListOfInt
-      .map(new Function1[Int, Int] {
-        override def apply(el: Int): Int = el * 2
-      }) // MyList [2, 4]
-      .filter(new Function1[Int, Boolean] {
-        override def apply(el: Int): Boolean = el == 2
-      }) // MyList [2]
-      .flatMap(new Function1[Int, MyList[Int]] {
-        override def apply(el: Int): MyList[Int] = Cons(el, Cons(el + 1, EmptyList))
-      }) // MyList [2, 3]
+      .map(_ * 2) // MyList [2, 4]
+      .filter(_ == 2) // MyList [2]
+      .flatMap(el => Cons(el, Cons(el + 1, EmptyList))) // MyList [2, 3]
       .toString
   )
   println(
     myListOfInt
-      .map(new Function1[Int, Int] {
-        override def apply(el: Int): Int = el * 2
-      }) // MyList [2, 4]
-      .filter(new Function1[Int, Boolean] {
-        override def apply(el: Int): Boolean = el == 2
-      }) // MyList [2]
-      .map(new Function1[Int, MyList[Int]] {
-        override def apply(el: Int): MyList[Int] = Cons(el, Cons(el + 1, EmptyList))
-      }) // MyList [MyList [2, 3]] <- нет разворачивания внутренних списков
+      .map(_ * 2) // MyList [2, 4]
+      .filter(_ == 2) // MyList [2]
+      .map(el => Cons(el, Cons(el + 1, EmptyList))) // MyList [MyList [2, 3]] <- нет разворачивания внутренних списков
       .toString
   )
   println(myListOfStr.toString)
