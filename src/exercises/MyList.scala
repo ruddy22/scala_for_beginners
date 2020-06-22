@@ -12,6 +12,12 @@ trait MyList[+A] {
   // lists concatination
   def ++[B >: A](lst: MyList[B]): MyList[B]
   def flatMap[B](transformer: A => MyList[B]): MyList[B]
+
+  // hofs
+  def foreach(fn: A => Unit): Unit
+  def sort(fn: (A,  A) => Int): MyList[A]
+  def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C]
+  def fold[B](start: B)(fn: (B, A) => B): B
 }
 
 case object EmptyList extends MyList[Nothing] {
@@ -24,6 +30,13 @@ case object EmptyList extends MyList[Nothing] {
   def flatMap[B](transformer: Nothing => MyList[B]): MyList[B] = EmptyList
   def filter(predicate: Nothing => Boolean): MyList[Nothing] = EmptyList
   def ++[B >: Nothing](lst: MyList[B]): MyList[B] = lst
+
+  def foreach(fn: Nothing => Unit): Unit = ()
+  def sort(fn: (Nothing, Nothing) => Int): MyList[Nothing] = EmptyList
+  def zipWith[B, C](list: MyList[B], fn: (Nothing, B) => C): MyList[C] =
+    if (!list.isEmpty) throw new RuntimeException("Lists do not have the same length")
+    else EmptyList
+  def fold[B](start: B)(fn: (B, Nothing) => B): B = start
 }
 
 case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
@@ -56,6 +69,34 @@ case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
    */
   def flatMap[B](transformer: A => MyList[B]): MyList[B] =
     transformer(h) ++ t.flatMap(transformer)
+
+  def foreach(fn: A => Unit): Unit = {
+    fn(h)
+    t.foreach(fn)
+  }
+  def sort(fn: (A,  A) => Int): MyList[A] = {
+    // TODO: make the tail recursion version
+    def insert(x: A, sortedList: MyList[A]): MyList[A] =
+      if (sortedList.isEmpty) Cons(x, EmptyList)
+      else if (fn(x, sortedList.head) < 0) Cons(x, sortedList)
+      else Cons(sortedList.head, insert(x, sortedList.tail))
+
+    val sortedTail = t.sort(fn)
+    insert(h, sortedTail)
+  }
+  def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C] =
+    if (list.isEmpty) throw new RuntimeException("Lists do not have the same length")
+    else Cons(zip(h, list.head), t.zipWith(list.tail, zip))
+
+  /**
+   * [1,2,3].fold(0)(+) =>
+   * [2,3].fold(1)(+) =>
+   * [3].fold(3)(+) =>
+   * [].fold(6)(+) =>
+   * 6
+   */
+  def fold[B](start: B)(fn: (B, A) => B): B =
+    t.fold(fn(start, h))(fn)
 }
 
 object TestMyList extends App {
@@ -95,6 +136,11 @@ object TestMyList extends App {
   println(myListOfStr.toString)
 
   println(cloneOfMyListOfInt == myListOfInt) // true, because case class
+  myListOfInt.foreach(println)
+  println(myListOfInt.sort((x, y) => y - x))
+  println(myListOfStr.zipWith[Int, String](myListOfInt, _ + "+" + _)) //=> MyList [Hello+1, Scala+2]
+  println(myListOfInt.fold(0)(_ + _)) // => 3
+  println(myListOfStr.fold("")(_ ++ _)) // => HelloScala
 }
 
 
