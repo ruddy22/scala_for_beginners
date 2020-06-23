@@ -141,6 +141,27 @@ object TestMyList extends App {
   println(myListOfStr.zipWith[Int, String](myListOfInt, _ + "+" + _)) //=> MyList [Hello+1, Scala+2]
   println(myListOfInt.fold(0)(_ + _)) // => 3
   println(myListOfStr.fold("")(_ ++ _)) // => HelloScala
+
+  // MyList is compatible with for-comprehensions
+  // because it have map, filter, flatMap
+  for {
+    n <- myListOfInt
+    str <- myListOfStr
+  } println(n.toString + '-' + str)
+  // print on each line
+  // 1-Hello
+  // 1-Scala
+  // 2-Hello
+  // 2-Scala
+
+  val combinations = for {
+    n <- myListOfInt
+    str <- myListOfStr
+  } yield n.toString + '-' + str
+  println(combinations)
+  // print on one line
+  // MyList [1-Hello, 1-Hello, 2-Hello, 2-Scala]
+  // omg, this is MyList instance (so, flatMap in action)
 }
 
 
